@@ -1,0 +1,44 @@
+---
+title: "Data Science: Homework 3"
+author: "Connie Zhang" 
+date: "10/09/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+instacart = 
+  library(p8105.datasets)
+  data("instacart")
+```
+The instacart dataset has `r dim(instacart)[1]` observations, with `r ncol(instacart)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. For example, this dataset provides information on an order of bulgarian yogurt, what aisle and department it can be found in (yogurt aisle 120, dairy egg department), and how many days since the prior order.   
+
+* Number of aisles and which aisles the most items are ordered from: 
+```{r}
+instacart %>%
+  count(aisle_id, name = "n") %>% 
+arrange (desc(n))
+```
+
+* Plot that shows the number of items ordered in each aisle, limited to aisles with more than 10000 items ordered 
+```{r}
+instacart %>%
+  count(aisle_id) %>%
+  filter(n >10000) %>%
+  ggplot(aes(x = aisle_id, y = n)) + ggtitle("Quantity of Items Ordered in Each Aisle") +
+  theme(plot.title = element_text(hjust = 0.5))+ geom_point() + 
+  labs(       x = "aisle ID",
+              y = "number of items ordered in aisle")
+```
+
+* Table that shows three most popular items in aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. 
+* Include the number of times each item is ordered in your table.
+```{r}
+
+```
+
