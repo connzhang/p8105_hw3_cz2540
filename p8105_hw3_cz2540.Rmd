@@ -20,18 +20,18 @@ instacart =
   library(p8105.datasets)
   data("instacart")
 ```
-The instacart dataset has `r dim(instacart)[1]` observations, with `r ncol(instacart)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. 
+* The instacart dataset has `r dim(instacart)[1]` observations, with `r ncol(instacart)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. 
 For example, the first order is `r head(instacart, 1) %>% knitr::kable()`
 It is an order of bulgarian yogurt, by user id 112108, placed on 10am on 4th day of week, Wednesday. The yogurt is in aisle 120, in the dairy eggs department. He purchased this product 4 times before and his last order was 9 days ago.  
 
-* Number of aisles and which aisles the most items are ordered from:
+Number of aisles and which aisles the most items are ordered from:
 ```{r}
 instacart %>%
   count(aisle_id, name = "n") %>% 
 arrange (desc(n))
 ```
 
-* Plot that shows the number of items ordered in each aisle, limited to aisles with more than 10000 items ordered
+Plot that shows the number of items ordered in each aisle, limited to aisles with more than 10000 items ordered: 
 ```{r}
 instacart %>%
   group_by(aisle) %>%
@@ -44,8 +44,7 @@ instacart %>%
               y = "number of items ordered in aisle") + viridis::scale_color_viridis(discrete = TRUE) + theme(legend.position = "none", axis.text.x = element_text(angle=70, hjust=1))
 ```
 
-* Table that shows three most popular items in the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. 
-* Include the number of times each item is ordered in your table.
+Table that shows three most popular items in the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table: 
 ```{r}
 table_popular = 
 instacart %>%
@@ -58,7 +57,7 @@ knitr::kable()
 table_popular
 ```
 
-* Table that shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table)
+Table that shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table): 
 ```{r}
 table_icecream_apple = instacart %>%
   select(product_name, order_dow, order_hour_of_day) %>%
@@ -68,43 +67,45 @@ table_icecream_apple = instacart %>%
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
   pivot_wider(names_from = "order_dow", values_from = "mean_hour") %>%
 knitr::kable(digits = 2)
-table_icecream_apple
 ```
-# Problem 2 
-* How to arrange from poor to excellent * 
-* How to take out dashes in the columns that separate county and state * 
-```{r}
-#import data
-data("brfss_smart2010")
 
-#clean data
+# Problem 2
+```{r}
+data("brfss_smart2010")
 cleanbrfss_data = brfss_smart2010 %>%
   janitor::clean_names() %>% 
-  rename(state = locationabbr, county = locationdesc) %>% 
+  separate(locationdesc, into = c("state", "county"), sep=3) %>%
+  select(-locationabbr) %>%
   filter(topic == "Overall Health") %>% 
-  filter(response %in% c("Poor", "Fair","Good", "Very good", "Excellent")) %>% 
-  mutate(response = factor(response, levels = c("Poor", "Fair","Good", "Very good", "Excellent"))) 
+  filter(response %in% c("Poor","Fair","Good","Very good", "Excellent")) %>% 
+  mutate(response = factor(response, levels = c("Poor", "Fair","Good", "Very good", "Excellent"))) %>%
+  mutate(county = stringr::str_replace(county, "- ", ""))
+cleanbrfss_data
 ```
 
-* States that were observed in 2002 at 7 or more locations 
+States that were observed in 2002 at 7 or more locations: 
 ```{r}
 cleanbrfss_data %>% 
   filter(year == 2002) %>% 
   group_by(state) %>% 
   summarize(n_location = n_distinct(county)) %>% 
-  filter(n_location >= 7)
+  filter(n_location >= 7) %>%
+  arrange(n_location)
 ```
+* In 2002, Connecticut, Florida, Massachusetts, North Carolina, New Jersey, and Pennsylvania were observed at 7 or more locations. 
 
-* States that were observed in 2010 at 7 or more locations 
+States that were observed in 2010 at 7 or more locations:  
 ```{r}
 cleanbrfss_data %>% 
   filter(year == 2010) %>% 
   group_by(state) %>% 
   summarize(n_location = n_distinct(county)) %>% 
-  filter(n_location >= 7)
+  filter(n_location >= 7) %>%
+  arrange(n_location)
 ```
+* In 2010, Colorado, Pennsylvania, South Carolina, Ohio, Maryland, New York, Nebraska, Washington, California, Maryland, North Carolina, Texas, New Jersey, and Florida were observed in 7 or more locations. 
 
-* Dataset limited to Excellent responses, and contains, year, state, averages of the data_value across locations within a state. 
+Dataset limited to Excellent responses, and contains, year, state, averages of the data_value across locations within a state: 
 ```{r}
 brfss_excellent = cleanbrfss_data %>% 
   filter(response == "Excellent") %>%
@@ -112,7 +113,51 @@ brfss_excellent = cleanbrfss_data %>%
   summarize(avg_data = mean(data_value))
 ```
 
-* Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+“Spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years: 
 ```{r}
+brfss_excellent %>%
+ggplot(aes(x = year , y = avg_data, color=state)) + geom_line() + 
+labs(title = "Average Value Over Time within a State", x = "Year", y = "Average Value") + 
+viridis::scale_color_viridis(discrete = TRUE) + theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 14), axis.text.x = element_text(angle=70, hjust=1)) + theme(legend.position = "right", axis.text.x = element_text(angle=70, hjust=1))
+```
 
+Two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
+```{r}
+table_2006 = 
+cleanbrfss_data %>%
+group_by(year, state, response) %>% 
+  filter(state == "NY", year == "2006") %>%
+  ggplot(aes(x = response, y = data_value, color = response))+
+  geom_point()+
+  labs(
+    title = "NY State Distribution of Data Value Responses for 2006",
+    x = "Responses",
+    y = "Data Values")
+table_2006
+```
+
+```{r}
+table_2010 = 
+  cleanbrfss_data %>%
+  group_by(year, state, response) %>% 
+  filter(state == "NY", year == "2010") %>%
+  ggplot(aes(x = response, y = data_value, color = response))+
+  geom_point()+
+  labs(
+    title = "NY State Distribution of Data Value Responses for 2010",
+    x = "Responses",
+    y = "Data Values")
+table_2010
+```
+```{r}
+(table_2006 + table_2010)
+
+```
+
+# Problem 3 
+```{r}
+acc_data = 
+  read_csv("./data/accel_data.csv") %>%
+  janitor::clean_names() 
+acc_data
 ```
