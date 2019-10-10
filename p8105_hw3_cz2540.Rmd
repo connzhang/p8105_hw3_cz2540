@@ -113,7 +113,7 @@ brfss_excellent = cleanbrfss_data %>%
   summarize(avg_data = mean(data_value))
 ```
 
-“Spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years: 
+“Spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years): 
 ```{r}
 brfss_excellent %>%
 ggplot(aes(x = year , y = avg_data, color=state)) + geom_line() + 
@@ -122,37 +122,6 @@ viridis::scale_color_viridis(discrete = TRUE) + theme_minimal() + theme(plot.tit
 ```
 
 Two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
-```{r}
-table_2006 = 
-cleanbrfss_data %>%
-group_by(year, state, response) %>% 
-  filter(state == "NY", year == "2006") %>%
-  ggplot(aes(x = response, y = data_value, color = response))+
-  geom_point()+
-  labs(
-    title = "NY State Distribution of Data Value Responses for 2006",
-    x = "Responses",
-    y = "Data Values")
-table_2006
-```
-
-```{r}
-table_2010 = 
-  cleanbrfss_data %>%
-  group_by(year, state, response) %>% 
-  filter(state == "NY", year == "2010") %>%
-  ggplot(aes(x = response, y = data_value, color = response))+
-  geom_point()+
-  labs(
-    title = "NY State Distribution of Data Value Responses for 2010",
-    x = "Responses",
-    y = "Data Values")
-table_2010
-```
-```{r}
-(table_2006 + table_2010)
-
-```
 
 # Problem 3 
 ```{r}
