@@ -1,5 +1,5 @@
 ---
-title: "Data Science: Homework 3"
+title: "Homework 3"
 author: "Connie Zhang" 
 date: "10/09/2019"
 output: github_document
@@ -9,36 +9,110 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(dplyr)
+library(patchwork)
+library(ggridges)
+library(viridis)
 ```
 
+# Problem 1 
 ```{r}
 instacart = 
   library(p8105.datasets)
   data("instacart")
 ```
-The instacart dataset has `r dim(instacart)[1]` observations, with `r ncol(instacart)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. For example, this dataset provides information on an order of bulgarian yogurt, what aisle and department it can be found in (yogurt aisle 120, dairy egg department), and how many days since the prior order.   
+The instacart dataset has `r dim(instacart)[1]` observations, with `r ncol(instacart)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. 
+For example, the first order is `r head(instacart, 1) %>% knitr::kable()`
+It is an order of bulgarian yogurt, by user id 112108, placed on 10am on 4th day of week, Wednesday. The yogurt is in aisle 120, in the dairy eggs department. He purchased this product 4 times before and his last order was 9 days ago.  
 
-* Number of aisles and which aisles the most items are ordered from: 
+* Number of aisles and which aisles the most items are ordered from:
 ```{r}
 instacart %>%
   count(aisle_id, name = "n") %>% 
 arrange (desc(n))
 ```
 
-* Plot that shows the number of items ordered in each aisle, limited to aisles with more than 10000 items ordered 
+* Plot that shows the number of items ordered in each aisle, limited to aisles with more than 10000 items ordered
 ```{r}
 instacart %>%
-  count(aisle_id) %>%
-  filter(n >10000) %>%
-  ggplot(aes(x = aisle_id, y = n)) + ggtitle("Quantity of Items Ordered in Each Aisle") +
+  group_by(aisle) %>%
+  summarize(aisle_n = n()) %>%
+  filter(aisle_n >10000) %>%
+  arrange (desc(aisle_n)) %>%
+  ggplot(aes(x = aisle, y = aisle_n, color = aisle)) + ggtitle("Quantity of Items Ordered in Each Aisle") +
   theme(plot.title = element_text(hjust = 0.5))+ geom_point() + 
-  labs(       x = "aisle ID",
-              y = "number of items ordered in aisle")
+  labs(       x = "aisle",
+              y = "number of items ordered in aisle") + viridis::scale_color_viridis(discrete = TRUE) + theme(legend.position = "none", axis.text.x = element_text(angle=70, hjust=1))
 ```
 
-* Table that shows three most popular items in aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. 
+* Table that shows three most popular items in the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. 
 * Include the number of times each item is ordered in your table.
+```{r}
+table_popular = 
+instacart %>%
+  filter(aisle %in% c("baking ingredients", "dog food care","packaged vegetables fruits")) %>%
+  group_by(aisle, product_name) %>%
+  summarize(n = n()) %>%
+top_n(3) %>%
+arrange(desc(n)) %>%
+knitr::kable()
+table_popular
+```
+
+* Table that shows the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table)
+```{r}
+table_icecream_apple = instacart %>%
+  select(product_name, order_dow, order_hour_of_day) %>%
+  group_by(product_name, order_dow) %>%
+  summarize(mean_hour = mean(order_hour_of_day)) %>%
+  mutate(order_dow = recode(order_dow, "0" = "Sunday", "1" = "Monday", "2" = "Tuesday", "3" = "Wednesday", "4" = "Thursday", "5" = "Friday", "6" = "Saturday")) %>%
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
+  pivot_wider(names_from = "order_dow", values_from = "mean_hour") %>%
+knitr::kable(digits = 2)
+table_icecream_apple
+```
+# Problem 2 
+* How to arrange from poor to excellent * 
+* How to take out dashes in the columns that separate county and state * 
+```{r}
+#import data
+data("brfss_smart2010")
+
+#clean data
+cleanbrfss_data = brfss_smart2010 %>%
+  janitor::clean_names() %>% 
+  rename(state = locationabbr, county = locationdesc) %>% 
+  filter(topic == "Overall Health") %>% 
+  filter(response %in% c("Poor", "Fair","Good", "Very good", "Excellent")) %>% 
+  mutate(response = factor(response, levels = c("Poor", "Fair","Good", "Very good", "Excellent"))) 
+```
+
+* States that were observed in 2002 at 7 or more locations 
+```{r}
+cleanbrfss_data %>% 
+  filter(year == 2002) %>% 
+  group_by(state) %>% 
+  summarize(n_location = n_distinct(county)) %>% 
+  filter(n_location >= 7)
+```
+
+* States that were observed in 2010 at 7 or more locations 
+```{r}
+cleanbrfss_data %>% 
+  filter(year == 2010) %>% 
+  group_by(state) %>% 
+  summarize(n_location = n_distinct(county)) %>% 
+  filter(n_location >= 7)
+```
+
+* Dataset limited to Excellent responses, and contains, year, state, averages of the data_value across locations within a state. 
+```{r}
+brfss_excellent = cleanbrfss_data %>% 
+  filter(response == "Excellent") %>%
+  group_by(state, year, response) %>% 
+  summarize(avg_data = mean(data_value))
+```
+
+* Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
 ```{r}
 
 ```
-
