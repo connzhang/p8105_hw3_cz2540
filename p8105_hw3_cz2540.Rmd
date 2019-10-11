@@ -79,8 +79,8 @@ cleanbrfss_data =
   brfss_smart2010 %>% #clean data 
   janitor::clean_names() %>% 
   separate(locationdesc, into = c("state", "county"), sep=3) %>%
-  select(-locationabbr) %>%
-  filter(topic == "Overall Health", response %in% c("Poor","Fair","Good","Very good", "Excellent")) %>% 
+  select (-locationabbr) %>%
+   filter(topic == "Overall Health", response %in% c("Poor","Fair","Good","Very good", "Excellent")) %>% 
   mutate(county = stringr::str_replace(county, "- ", ""), response = factor(response, levels = c("Poor", "Fair","Good", "Very good", "Excellent"))) 
 cleanbrfss_data
 ```
@@ -111,7 +111,7 @@ Dataset limited to Excellent responses, and contains, year, state, averages of t
 ```{r}
 brfss_excellent = cleanbrfss_data %>% 
   filter(response == "Excellent") %>%
-  group_by(state, year, response) %>% 
+  group_by(year, state, county) %>% 
   summarize(avg_data = mean(data_value))
 brfss_excellent
 ```
@@ -120,17 +120,32 @@ brfss_excellent
 ```{r}
 brfss_excellent %>%
 ggplot(aes(x = year , y = avg_data, color=state)) + geom_line() + 
-labs(title = "Average Value Over Time within a State", x = "Year", y = "Average Value") + 
+labs(title = "Average Value Over Time Within Each State", x = "Year", y = "Average Value") + 
 viridis::scale_color_viridis(discrete = TRUE) + theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 14), axis.text.x = element_text(angle=70, hjust=1)) + theme(legend.position = "right", axis.text.x = element_text(angle=70, hjust=1))
 ```
 
 Two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State:
 
+```{r}
+
+```
 
 # Problem 3 
 ```{r}
 acc_data = 
   read_csv("./data/accel_data.csv") %>%
-  janitor::clean_names() 
+  janitor::clean_names() %>%
+  pivot_longer (
+    activity_1:activity_1440, names_to = "activity_min", values_to = "activity_count") %>%
+  mutate(activity_min = stringr::str_replace(activity_min, "activity_", " ")) %>%
+  mutate(weekkday = day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = day %in% c("Saturday", "Sunday"))
 acc_data
 ```
+* This dataset has `r dim(acc_data)[1]` observations with `r ncol(acc_data)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. Variables include the day of the week the activity occurs, the minute in which activity is being recorded, and the acceleration count of the 63 y/o male patient's body at each minute. Additionally, the dataset includes variables that categorize if the date/minute/count being logged is a weekend or weekday. 
+
+Aggregate dataset accross minutes to create a total activity variable for each day, and create a table showing these totals: 
+```{r}
+
+
+```
+* Trends include: 
