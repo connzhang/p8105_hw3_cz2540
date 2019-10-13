@@ -94,7 +94,6 @@ cleanbrfss_data %>%
   filter(n_location >= 7) %>%
   arrange(n_location)
 ```
-```
 * In 2002, Connecticut, Florida, Massachusetts, North Carolina, New Jersey, and Pennsylvania were observed at 7 or more locations. 
 
 States that were observed in 2010 at 7 or more locations:  
@@ -151,8 +150,7 @@ acc_data =
   janitor::clean_names() %>%
   pivot_longer (
     activity_1:activity_1440, names_to = "activity_min", values_to = "activity_count") %>%
-  mutate(activity_min = stringr::str_replace(activity_min, "activity_", " "), weekkday = day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = day %in% c("Saturday", "Sunday")) %>%
-select (-day_id)
+  mutate(activity_min = stringr::str_replace(activity_min, "activity_", " "), weekkday = day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = day %in% c("Saturday", "Sunday")) 
 acc_data
 ```
 * This dataset has `r dim(acc_data)[1]` observations with `r ncol(acc_data)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. Variables include the day of the week the activity occurs, the minute in which activity is being recorded, and the acceleration count of the 63 y/o male patient's body at each minute. Additionally, the dataset includes variables that categorize if the date/minute/count being logged is a weekend or weekday. 
@@ -161,15 +159,22 @@ Aggregate dataset across minutes to create a total activity variable for each da
 ```{r}
 total_activity = acc_data %>%
   group_by(day) %>%
-  summarize(total_activity = mean (activity_count)) %>%
+  summarize(total_activity = sum (activity_count)) %>%
   arrange(desc(total_activity)) %>%
   knitr::kable()
 total_activity
 ```
 
-
 Single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week: 
 ```{r}
+acc_data %>% 
+ group_by(day_id, day) %>%
+  summarize(total_counts=sum(activity_count)) %>%
+ggplot(aes(x = day_id, y = total_counts, color = day)) + geom_point() + geom_line() + labs(x="day ID", y = "total activity coutns per day", title = "Total Activity Per Day") + 
+  theme(
+    axis.title = element_text(face="bold"),
+    plot.title = element_text(face="bold")
+  )
 ```
-
-* Patterns or conclusions you can make based on this graph
+*Trends and patterns*: 
+The total activity during the weekends (Saturday, Sunday) decrease over time until he becomes inactive. Weekday activity seems fairly consistent and similar with each other, except on Fridays when activity seemed to incline through days 20 to 30. Initially, Mondays were increasingly active over time but after day 15 decreased. 
