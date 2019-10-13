@@ -75,13 +75,13 @@ data("brfss_smart2010") #load data
 ```
 
 ```{r}
-cleanbrfss_data = 
-  brfss_smart2010 %>% #clean data 
-  janitor::clean_names() %>% 
-  separate(locationdesc, into = c("state", "county"), sep=3) %>%
-  select (-locationabbr) %>%
-   filter(topic == "Overall Health", response %in% c("Poor","Fair","Good","Very good", "Excellent")) %>% 
-  mutate(county = stringr::str_replace(county, "- ", ""), response = factor(response, levels = c("Poor", "Fair","Good", "Very good", "Excellent"))) 
+cleanbrfss_data = brfss_smart2010 %>%
+janitor::clean_names() %>%
+separate(locationdesc, into = c("state", "county"), sep= 3) %>% 
+mutate(county= stringr::str_replace(county, "- ", "")) %>% 
+filter(topic == "Overall Health", response %in% c("Excellent", "Very good", "Good", "Fair", "Poor")) %>%
+mutate(response = factor(response, levels = c("Poor","Fair","Good","Very good", "Excellent" ))) %>%
+select(-state, -location_id, -data_value_footnote_symbol, -data_value_footnote)
 cleanbrfss_data
 ```
 
@@ -89,10 +89,11 @@ States that were observed in 2002 at 7 or more locations:
 ```{r}
 cleanbrfss_data %>% 
   filter(year == 2002) %>% 
-  group_by(state) %>% 
+  group_by(locationabbr) %>% 
   summarize(n_location = n_distinct(county)) %>% 
   filter(n_location >= 7) %>%
   arrange(n_location)
+```
 ```
 * In 2002, Connecticut, Florida, Massachusetts, North Carolina, New Jersey, and Pennsylvania were observed at 7 or more locations. 
 
@@ -100,7 +101,7 @@ States that were observed in 2010 at 7 or more locations:
 ```{r}
 cleanbrfss_data %>% 
   filter(year == 2010) %>% 
-  group_by(state) %>% 
+  group_by(locationabbr) %>% 
   summarize(n_location = n_distinct(county)) %>% 
   filter(n_location >= 7) %>%
   arrange(n_location)
@@ -111,7 +112,7 @@ Dataset limited to Excellent responses, and contains, year, state, averages of t
 ```{r}
 brfss_excellent = cleanbrfss_data %>% 
   filter(response == "Excellent") %>%
-  group_by(year, state, county) %>% 
+  group_by(year, locationabbr, county) %>% 
   summarize(avg_data = mean(data_value))
 brfss_excellent
 ```
@@ -119,7 +120,7 @@ brfss_excellent
 “Spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years): 
 ```{r}
 brfss_excellent %>%
-ggplot(aes(x = year , y = avg_data, color=state)) + geom_line() + 
+ggplot(aes(x = year , y = avg_data, color= locationabbr)) + geom_line() + 
 labs(title = "Average Value Over Time Within Each State", x = "Year", y = "Average Value") + 
 viridis::scale_color_viridis(discrete = TRUE) + theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 14), axis.text.x = element_text(angle=70, hjust=1)) + theme(legend.position = "right", axis.text.x = element_text(angle=70, hjust=1))
 ```
@@ -127,7 +128,19 @@ viridis::scale_color_viridis(discrete = TRUE) + theme_minimal() + theme(plot.tit
 Two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State:
 
 ```{r}
+combined_plot = 
+cleanbrfss_data %>%
+  filter(topic == "Overall Health", 
+  year == "2006"| 
+  year == "2010",
+  locationabbr == "NY") 
+combined_plot
 
+twopanel_plot = combined_plot %>% 
+  ggplot(aes(x = response, y = data_value, color = response))+
+  geom_boxplot()+
+  facet_grid(. ~year) 
+twopanel_plot
 ```
 
 # Problem 3 
@@ -137,15 +150,27 @@ acc_data =
   janitor::clean_names() %>%
   pivot_longer (
     activity_1:activity_1440, names_to = "activity_min", values_to = "activity_count") %>%
-  mutate(activity_min = stringr::str_replace(activity_min, "activity_", " ")) %>%
-  mutate(weekkday = day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = day %in% c("Saturday", "Sunday"))
+  mutate(activity_min = stringr::str_replace(activity_min, "activity_", " "), weekkday = day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = day %in% c("Saturday", "Sunday")) %>%
+select (-day_id)
 acc_data
 ```
 * This dataset has `r dim(acc_data)[1]` observations with `r ncol(acc_data)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. Variables include the day of the week the activity occurs, the minute in which activity is being recorded, and the acceleration count of the 63 y/o male patient's body at each minute. Additionally, the dataset includes variables that categorize if the date/minute/count being logged is a weekend or weekday. 
 
-Aggregate dataset accross minutes to create a total activity variable for each day, and create a table showing these totals: 
+Aggregate dataset across minutes to create a total activity variable for each day, and create a table showing these totals: 
 ```{r}
-
-
+total_activity = acc_data %>%
+  group_by(day) %>%
+  summarize(total_activity = mean (activity_count)) %>%
+  arrange(desc(total_activity)) %>%
+  knitr::kable()
+total_activity
 ```
-* Trends include: 
+* There are no apparent trends seen from aggregating total minutes across each day. 
+
+Single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week: 
+```{r}
+single_panel = acc_data %>%
+  
+```
+
+* Patterns or conclusions you can make based on this graph
