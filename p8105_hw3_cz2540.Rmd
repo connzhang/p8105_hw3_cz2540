@@ -153,7 +153,7 @@ acc_data =
   mutate(activity_min = stringr::str_replace(activity_min, "activity_", " "), weekkday = day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = day %in% c("Saturday", "Sunday")) 
 acc_data
 ```
-* This dataset has `r dim(acc_data)[1]` observations with `r ncol(acc_data)[1]` variables. Key variables include order details, product name, aisle, and department with respective numeric IDs associated with them. Variables include the day of the week the activity occurs, the minute in which activity is being recorded, and the acceleration count of the 63 y/o male patient's body at each minute. Additionally, the dataset includes variables that categorize if the date/minute/count being logged is a weekend or weekday. 
+* This dataset has `r dim(acc_data)[1]` observations with `r ncol(acc_data)[1]` variables. Variables include the day of the week the activity occurs, the minute in which activity is being recorded, and the acceleration count of the 63 y/o male patient's body at each minute. Additionally, the dataset includes variables that categorize if the date/minute/count being logged is a weekend or weekday. 
 
 Aggregate dataset across minutes to create a total activity variable for each day, and create a table showing these totals: 
 ```{r}
