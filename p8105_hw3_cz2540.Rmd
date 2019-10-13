@@ -105,6 +105,7 @@ cleanbrfss_data %>%
   summarize(n_location = n_distinct(county)) %>% 
   filter(n_location >= 7) %>%
   arrange(n_location)
+cleanbrfss_data
 ```
 * In 2010, Colorado, Pennsylvania, South Carolina, Ohio, Maryland, New York, Nebraska, Washington, California, Maryland, North Carolina, Texas, New Jersey, and Florida were observed in 7 or more locations. 
 
@@ -165,12 +166,10 @@ total_activity = acc_data %>%
   knitr::kable()
 total_activity
 ```
-* There are no apparent trends seen from aggregating total minutes across each day. 
+
 
 Single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week: 
 ```{r}
-single_panel = acc_data %>%
-  
 ```
 
 * Patterns or conclusions you can make based on this graph
